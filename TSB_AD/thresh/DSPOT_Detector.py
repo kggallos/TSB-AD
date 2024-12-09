@@ -87,7 +87,6 @@ class DSPOT(BaseDetector):
         self.thresholds = []
         self.initial_threshold_ = None
         self.peaks_ = None
-        # self.k_ = 0  # Tracks the number of processed samples
 
     def fit(self, X, y=None):
         """
