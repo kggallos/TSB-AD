@@ -41,8 +41,9 @@ class IQR(BaseDetector):
     threshold_ : float
         The threshold value that separates inliers from outliers.
 
-    dscores_ : ndarray of shape (n_samples,)
-        1D array of decomposed decision scores.
+    decision_scores_: ndarray of shape (n_samples,) #TODO
+        Not actually used, present for API consistency by convention.
+        It contains 0s and 1s because this is a thresholding method.
 
     Notes
     -----
@@ -101,8 +102,6 @@ class IQR(BaseDetector):
 
         self.threshold_ = limit
 
-        #TODO should we keep this?
-        # or maybe set decision_scores_ with 0s and 1s based on the method?
         self.decision_scores_ = np.zeros(n_samples) 
 
         return self
@@ -135,11 +134,13 @@ class IQR(BaseDetector):
         return preds
 
 
-def run_Custom_AD_Unsupervised(data, random_state):
-    clf = IQR(random_state=random_state)
+def run_Custom_AD_Unsupervised(data, HP):
+    # clf = IQR(random_state=random_state)#!
+    clf = IQR(**HP)
     clf.fit(data)
-    score = clf.decision_scores_
-    score = MinMaxScaler(feature_range=(0,1)).fit_transform(score.reshape(-1,1)).ravel()
+    score = clf.predict(data)
+    # score = clf.decision_scores_
+    # score = MinMaxScaler(feature_range=(0,1)).fit_transform(score.reshape(-1,1)).ravel()
     return score
 
 # def run_Custom_AD_Semisupervised(data_train, data_test):
@@ -155,17 +156,17 @@ if __name__ == '__main__':
     ## ArgumentParser
     parser = argparse.ArgumentParser(description='Running IQR')
     parser.add_argument('--filename', type=str, default='001_NAB_id_1_Facility_tr_1007_1st_2014.csv')
-    # parser.add_argument('--data_direc', type=str, default='../Datasets/TSB-AD-U/')
     parser.add_argument('--data_direc', type=str, default='Datasets/TSB-AD-U/')
     parser.add_argument('--AD_Name', type=str, default='IQR')
     args = parser.parse_args()
 
+    # multivariate
     # parser.add_argument('--filename', type=str, default='057_SMD_id_1_Facility_tr_4529_1st_4629.csv')
     # parser.add_argument('--data_direc', type=str, default='Datasets/TSB-AD-M/')
 
 
     Custom_AD_HP = {
-        'random_state': 1234,
+        'random_state': 1234,   # not related to method itself, but to formatting input
     }
 
     df = pd.read_csv(args.data_direc + args.filename).dropna()
@@ -181,8 +182,7 @@ if __name__ == '__main__':
     start_time = time.time()
 
     # output = run_Custom_AD_Semisupervised(data_train, data, **Custom_AD_HP)
-    output = run_Custom_AD_Unsupervised(data, **Custom_AD_HP)
-    # output = run_Custom_AD_Unsupervised(data) #NOTE no parameters for IQR
+    output = run_Custom_AD_Unsupervised(data, Custom_AD_HP)
 
     end_time = time.time()
     run_time = end_time - start_time
