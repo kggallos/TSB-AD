@@ -53,7 +53,6 @@ class FGD(BaseDetector):
     """
 
     def __init__(self, random_state=1234, normalize=True):
-        super().__init__()
         self.random_state = random_state
         self.normalize = normalize
 

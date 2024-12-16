@@ -82,7 +82,6 @@ class QMCD(BaseDetector):
     def __init__(self, method='WD', lim='P', 
                  random_state=1234, normalize=True):
 
-        super().__init__() #TODO
         self.method = method
         self.lim = lim
         self.random_state = random_state
