@@ -111,8 +111,6 @@ class BOOT(BaseDetector):
 
         if self.normalize: X = normalize(X)
 
-        # self.X = X
-
         limit1, limit2 = stats.bootstrap(
             X.reshape(1, -1),
             np.std,

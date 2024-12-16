@@ -119,9 +119,7 @@ class CLF(BaseDetector):
 
         X = check_scores(X, random_state=self.random_state)
 
-        X = normalize(X)
-
-        # self.X = X
+        if self.normalize: X = normalize(X)
 
         # Calculate expected y
         if self.method == 'complex':

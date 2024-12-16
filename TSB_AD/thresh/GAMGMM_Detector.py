@@ -169,8 +169,6 @@ class GAMGMM(BaseDetector):
 
         if self.normalize: X = normalize(X)
 
-        # self.X = X
-
         if (np.asarray(X).ndim == 2) & (np.atleast_2d(X).shape[1] > 1):
 
             X = check_array(X, ensure_2d=True)

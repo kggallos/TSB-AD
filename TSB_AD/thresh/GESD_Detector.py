@@ -142,8 +142,6 @@ class GESD(BaseDetector):
 
         if self.normalize: X = normalize(X)
 
-        # self.X = X
-
         arr = X.copy()
 
         limit = 1.1

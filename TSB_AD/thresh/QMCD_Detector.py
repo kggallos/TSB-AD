@@ -16,7 +16,7 @@ from TSB_AD.evaluation.metrics import get_metrics
 from TSB_AD.utils.slidingWindows import find_length_rank
 from TSB_AD.models.base import BaseDetector
 
-from .thresholding_utils import check_scores, normalize, gen_kde
+from .thresholding_utils import check_scores, normalize
 
 class QMCD(BaseDetector):
     """QMCD class for Quasi-Monte Carlo Discrepancy thresholder.

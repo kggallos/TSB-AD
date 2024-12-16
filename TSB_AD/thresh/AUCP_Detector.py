@@ -8,7 +8,6 @@ Original source: [https://github.com/KulikDM/pythresh]
 
 import pandas as pd
 import numpy as np
-import scipy.stats as stats
 import argparse, time
 from sklearn.metrics import auc
 
@@ -116,9 +115,7 @@ class AUCP(BaseDetector):
 
         X = check_scores(X, random_state=self.random_state)
 
-        X = normalize(X)
-
-        self.X = X
+        if self.normalize: X = normalize(X)
 
         # Generate KDE
         val, dat_range = gen_kde(X, 0, 1, len(X)*2)

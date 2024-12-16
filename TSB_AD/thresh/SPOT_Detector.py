@@ -9,7 +9,6 @@ Original source: [https://github.com/cbhua/peak-over-threshold]
 import pandas as pd
 import numpy as np
 import argparse, time
-from sklearn.preprocessing import MinMaxScaler
 
 from TSB_AD.evaluation.metrics import get_metrics
 from TSB_AD.utils.slidingWindows import find_length_rank

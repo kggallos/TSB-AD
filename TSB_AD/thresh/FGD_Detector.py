@@ -8,7 +8,6 @@ Original source: [https://github.com/KulikDM/pythresh]
 
 import pandas as pd
 import numpy as np
-import scipy.stats as stats
 import argparse, time
 
 from TSB_AD.evaluation.metrics import get_metrics

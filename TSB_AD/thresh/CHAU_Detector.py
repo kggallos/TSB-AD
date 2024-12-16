@@ -15,7 +15,6 @@ import argparse, time
 from TSB_AD.evaluation.metrics import get_metrics
 from TSB_AD.utils.slidingWindows import find_length_rank
 from TSB_AD.models.base import BaseDetector
-from TSB_AD.utils.utility import zscore
 
 from .thresholding_utils import check_scores, normalize
 
@@ -141,9 +140,7 @@ class CHAU(BaseDetector):
 
         X = check_scores(X, random_state=self.random_state)
 
-        X = normalize(X)
-
-        # self.X = X
+        if self.normalize: X = normalize(X)
 
         # Calculate Chauvenet's criterion for one tail
         Pz = 1/(4*len(X))

@@ -8,7 +8,6 @@ Original source: [https://github.com/KulikDM/pythresh]
 
 import pandas as pd
 import numpy as np
-import scipy.stats as stats
 import argparse, time
 
 from TSB_AD.evaluation.metrics import get_metrics
@@ -122,8 +121,6 @@ class DECOMP(BaseDetector):
         X = check_scores(X, random_state=self.random_state)
 
         if self.normalize: X = normalize(X)
-
-        # self.X = X
 
         # Generate a CDF of the decision scores
         val, dat_range = gen_cdf(X, 0, 1, len(X)*3)

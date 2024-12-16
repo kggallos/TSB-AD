@@ -101,8 +101,6 @@ class FWFM(BaseDetector):
 
         if self.normalize: X = normalize(X)
 
-        # self.X = X
-
         # Generate KDE
         val, _ = gen_kde(X, -1, 1, len(X)*3)
         val = normalize(val)

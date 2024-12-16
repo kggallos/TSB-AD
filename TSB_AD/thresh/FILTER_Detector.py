@@ -126,8 +126,6 @@ class FILTER(BaseDetector):
 
         if self.normalize: X = normalize(X)
 
-        # self.X = X
-
         # Get sigma variables for various applications for each filter
         sig = (len(X)*np.std(X) if self.sigma == 'auto'
                else self.sigma)
