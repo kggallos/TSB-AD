@@ -15,8 +15,19 @@ from sklearn.utils import check_array
 
 
 def normalize(data):
-    return ((data - data.min(axis=0)) /
-            (data.max(axis=0) - data.min(axis=0)))
+
+    min_val = data.min(axis=0)
+    max_val = data.max(axis=0)
+    range_val = max_val - min_val
+
+    # Avoid division by zero by setting zero ranges to 1
+    if np.ndim(range_val) > 0:
+        range_val = np.where(range_val == 0, 1, range_val)
+    else:
+        range_val = 1 if range_val == 0 else range_val
+   
+    return (data - min_val) / range_val
+
 
 def cut(decision, limit):
     labels = np.zeros(len(decision), dtype=int)
