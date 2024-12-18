@@ -14,7 +14,6 @@ from sklearn.metrics import auc
 from TSB_AD.evaluation.metrics import get_metrics
 from TSB_AD.utils.slidingWindows import find_length_rank
 from TSB_AD.models.base import BaseDetector
-from TSB_AD.utils.utility import zscore
 
 from .thresholding_utils import check_scores, normalize, gen_kde
 
@@ -38,7 +37,7 @@ class AUCP(BaseDetector):
         threshold_ : float
             The threshold value that separates inliers from outliers.
 
-        decision_scores_: ndarray of shape (n_samples,) #TODO
+        decision_scores_: ndarray of shape (n_samples,) #TODO, needs to be removed?
             Not actually used, present for API consistency by convention.
             It contains 0s and 1s because this is a thresholding method.
 
@@ -152,9 +151,13 @@ if __name__ == '__main__':
     Start_T = time.time()
     ## ArgumentParser
     parser = argparse.ArgumentParser(description='Running MAD')
-    parser.add_argument('--filename', type=str, default='001_NAB_id_1_Facility_tr_1007_1st_2014.csv')
-    parser.add_argument('--data_direc', type=str, default='Datasets/TSB-AD-U/')
+    # parser.add_argument('--filename', type=str, default='001_NAB_id_1_Facility_tr_1007_1st_2014.csv')
+    # parser.add_argument('--data_direc', type=str, default='Datasets/TSB-AD-U/')
     parser.add_argument('--AD_Name', type=str, default='MAD')
+
+    # multivariate
+    parser.add_argument('--filename', type=str, default='057_SMD_id_1_Facility_tr_4529_1st_4629.csv')
+    parser.add_argument('--data_direc', type=str, default='Datasets/TSB-AD-M/')
     args = parser.parse_args()
 
     Custom_AD_HP = {
@@ -168,30 +171,10 @@ if __name__ == '__main__':
     print('label: ', label.shape)
 
     slidingWindow = find_length_rank(data, rank=1)
-    train_index = args.filename.split('.')[0].split('_')[-3]
-    data_train = data[:int(train_index), :]
-    data_test = data[int(train_index):, :]
-    label_test = label[int(train_index):]
 
-    start_time = time.time()
-
-    print("------- ON TEST DATA -------")
-    clf = AUCP()
-    # clf.fit(data_train)
-    output = clf.predict(data_test)
-    pred = output   # output has already the predictions
-
-    end_time = time.time()
-    run_time = end_time - start_time
-
-    evaluation_result = get_metrics(output, label_test, slidingWindow=slidingWindow, pred=pred)
-    print('Evaluation Result: ', evaluation_result)
-
-    ####!
     print("------- ON WHOLE DATA -------")
     clf = AUCP()
-    # clf.fit(data)
     output = clf.predict(data)
-    pred = output
+    pred = output   # output has already the predictions
     evaluation_result = get_metrics(output, label, slidingWindow=slidingWindow, pred=pred)
     print('Evaluation Result: ', evaluation_result)
