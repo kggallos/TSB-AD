@@ -9,15 +9,14 @@ Original source: [https://github.com/KulikDM/pythresh]
 import pandas as pd
 import numpy as np
 from scipy.stats import gaussian_kde
-import argparse, time
+import argparse
 
 from TSB_AD.evaluation.metrics import get_metrics
 from TSB_AD.utils.slidingWindows import find_length_rank
-from TSB_AD.models.base import BaseDetector
 
 from .thresholding_utils import check_scores, normalize
 
-class CLF(BaseDetector):
+class CLF():
     r"""CLF class for Trained Classifier thresholder.
 
        Use the trained linear classifier to evaluate a non-parametric means
@@ -59,7 +58,6 @@ class CLF(BaseDetector):
     """
 
     def __init__(self, method='complex', random_state=1234, normalize=True):
-        super().__init__()
 
         if method == 'complex':
 
@@ -144,12 +142,14 @@ class CLF(BaseDetector):
 
 if __name__ == '__main__':
 
-    Start_T = time.time()
     ## ArgumentParser
-    parser = argparse.ArgumentParser(description='Running MAD')
+    parser = argparse.ArgumentParser(description='Running CLF')
     parser.add_argument('--filename', type=str, default='001_NAB_id_1_Facility_tr_1007_1st_2014.csv')
     parser.add_argument('--data_direc', type=str, default='Datasets/TSB-AD-U/')
-    parser.add_argument('--AD_Name', type=str, default='MAD')
+    parser.add_argument('--AD_Name', type=str, default='CLF')
+    # multivariate
+    # parser.add_argument('--filename', type=str, default='057_SMD_id_1_Facility_tr_4529_1st_4629.csv')
+    # parser.add_argument('--data_direc', type=str, default='Datasets/TSB-AD-M/')
     args = parser.parse_args()
 
     Custom_AD_HP = {
@@ -165,28 +165,8 @@ if __name__ == '__main__':
 
     slidingWindow = find_length_rank(data, rank=1)
     train_index = args.filename.split('.')[0].split('_')[-3]
-    data_train = data[:int(train_index), :]
-    data_test = data[int(train_index):, :]
-    label_test = label[int(train_index):]
 
-    start_time = time.time()
-
-    print("------- ON TEST DATA -------")
     clf = CLF(**Custom_AD_HP)
-    # clf.fit(data_train)
-    output = clf.predict(data_test)
-    pred = output   # output has already the predictions
-
-    end_time = time.time()
-    run_time = end_time - start_time
-
-    evaluation_result = get_metrics(output, label_test, slidingWindow=slidingWindow, pred=pred)
-    print('Evaluation Result: ', evaluation_result)
-
-    ####!
-    print("------- ON WHOLE DATA -------")
-    clf = CLF(**Custom_AD_HP)
-    # clf.fit(data)
     output = clf.predict(data)
     pred = output
     evaluation_result = get_metrics(output, label, slidingWindow=slidingWindow, pred=pred)

@@ -13,11 +13,10 @@ import ruptures as rpt
 
 from TSB_AD.evaluation.metrics import get_metrics
 from TSB_AD.utils.slidingWindows import find_length_rank
-from TSB_AD.models.base import BaseDetector
 
 from .thresholding_utils import check_scores, normalize, gen_cdf, gen_kde
 
-class CPD(BaseDetector):
+class CPD():
     r"""CPD class for Change Point Detection thresholder.
 
        Use change point detection to find a non-parametric means
@@ -135,10 +134,10 @@ if __name__ == '__main__':
 
     Start_T = time.time()
     ## ArgumentParser
-    parser = argparse.ArgumentParser(description='Running MAD')
+    parser = argparse.ArgumentParser(description='Running CPD')
     parser.add_argument('--filename', type=str, default='001_NAB_id_1_Facility_tr_1007_1st_2014.csv')
     parser.add_argument('--data_direc', type=str, default='Datasets/TSB-AD-U/')
-    parser.add_argument('--AD_Name', type=str, default='MAD')
+    parser.add_argument('--AD_Name', type=str, default='CPD')
     args = parser.parse_args()
 
     Custom_AD_HP = {
@@ -153,33 +152,13 @@ if __name__ == '__main__':
 
     slidingWindow = find_length_rank(data, rank=1)
     train_index = args.filename.split('.')[0].split('_')[-3]
-    data_train = data[:int(train_index), :]
-    data_test = data[int(train_index):, :]
-    label_test = label[int(train_index):]
 
-    start_time = time.time()
-
-    print("------- ON TEST DATA -------")
     methods = ['Dynp', 'KernelCPD', 'Binseg', 'BottomUp']
     for method in methods:
         print(f"\nRunning method: {method}")
         Custom_AD_HP['method'] = method
         clf = CPD(**Custom_AD_HP)
-        # clf.fit(data_train)
-        output = clf.predict(data_test)
-        pred = output   # output has already the predictions
-
-        end_time = time.time()
-        run_time = end_time - start_time
-
-        evaluation_result = get_metrics(output, label_test, slidingWindow=slidingWindow, pred=pred)
+        output = clf.predict(data)
+        pred = output
+        evaluation_result = get_metrics(output, label, slidingWindow=slidingWindow, pred=pred)
         print('Evaluation Result: ', evaluation_result)
-
-    ####!
-    print("------- ON WHOLE DATA -------")
-    # clf = CPD()
-    # # clf.fit(data)
-    # output = clf.predict(data)
-    # pred = output
-    # evaluation_result = get_metrics(output, label, slidingWindow=slidingWindow, pred=pred)
-    # print('Evaluation Result: ', evaluation_result)

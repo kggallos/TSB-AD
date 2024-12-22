@@ -13,11 +13,10 @@ import argparse, time
 
 from TSB_AD.evaluation.metrics import get_metrics
 from TSB_AD.utils.slidingWindows import find_length_rank
-from TSB_AD.models.base import BaseDetector
 
 from .thresholding_utils import check_scores, normalize
 
-class MAD(BaseDetector):
+class MAD():
     r"""MAD class for Median Absolute Deviation thresholder.
 
        Use the median absolute deviation to evaluate a non-parametric
@@ -151,29 +150,8 @@ if __name__ == '__main__':
     print('label: ', label.shape)
 
     slidingWindow = find_length_rank(data, rank=1)
-    train_index = args.filename.split('.')[0].split('_')[-3]
-    data_train = data[:int(train_index), :]
-    data_test = data[int(train_index):, :]
-    label_test = label[int(train_index):]
 
-    start_time = time.time()
-
-    print("------- ON TEST DATA -------")
     clf = MAD(**Custom_AD_HP)
-    # clf.fit(data_train)
-    output = clf.predict(data_test)
-    pred = output   # output has already the predictions
-
-    end_time = time.time()
-    run_time = end_time - start_time
-
-    evaluation_result = get_metrics(output, label_test, slidingWindow=slidingWindow, pred=pred)
-    print('Evaluation Result: ', evaluation_result)
-
-    ####!
-    print("------- ON WHOLE DATA -------")
-    clf = MAD(**Custom_AD_HP)
-    # clf.fit(data)
     output = clf.predict(data)
     pred = output
     evaluation_result = get_metrics(output, label, slidingWindow=slidingWindow, pred=pred)

@@ -135,10 +135,10 @@ if __name__ == '__main__':
 
     Start_T = time.time()
     ## ArgumentParser
-    parser = argparse.ArgumentParser(description='Running MAD')
+    parser = argparse.ArgumentParser(description='Running FGD')
     parser.add_argument('--filename', type=str, default='001_NAB_id_1_Facility_tr_1007_1st_2014.csv')
     parser.add_argument('--data_direc', type=str, default='Datasets/TSB-AD-U/')
-    parser.add_argument('--AD_Name', type=str, default='MAD')
+    parser.add_argument('--AD_Name', type=str, default='FGD')
     args = parser.parse_args()
 
     # multivariate
@@ -156,29 +156,8 @@ if __name__ == '__main__':
     print('label: ', label.shape)
 
     slidingWindow = find_length_rank(data, rank=1)
-    train_index = args.filename.split('.')[0].split('_')[-3]
-    data_train = data[:int(train_index), :]
-    data_test = data[int(train_index):, :]
-    label_test = label[int(train_index):]
 
-    start_time = time.time()
-
-    print("------- ON TEST DATA -------")
     clf = FGD(**Custom_AD_HP)
-    # clf.fit(data_train)
-    output = clf.predict(data_test)
-    pred = output   # output has already the predictions
-
-    end_time = time.time()
-    run_time = end_time - start_time
-
-    evaluation_result = get_metrics(output, label_test, slidingWindow=slidingWindow, pred=pred)
-    print('Evaluation Result: ', evaluation_result)
-
-    ####!
-    print("------- ON WHOLE DATA -------")
-    clf = FGD(**Custom_AD_HP)
-    # clf.fit(data)
     output = clf.predict(data)
     pred = output
     evaluation_result = get_metrics(output, label, slidingWindow=slidingWindow, pred=pred)

@@ -13,11 +13,10 @@ from sklearn.metrics import auc
 
 from TSB_AD.evaluation.metrics import get_metrics
 from TSB_AD.utils.slidingWindows import find_length_rank
-from TSB_AD.models.base import BaseDetector
 
 from .thresholding_utils import check_scores, normalize, gen_kde
 
-class AUCP(BaseDetector):
+class AUCP():
     r"""AUCP class for Area Under Curve Precentage thresholder.
 
        Use the area under the curve to evaluate a non-parametric means
@@ -67,7 +66,6 @@ class AUCP(BaseDetector):
     """
 
     def __init__(self, random_state=1234, normalize=True):
-        super().__init__()
         self.random_state = random_state
         self.normalize = normalize
 
@@ -150,14 +148,14 @@ if __name__ == '__main__':
 
     Start_T = time.time()
     ## ArgumentParser
-    parser = argparse.ArgumentParser(description='Running MAD')
-    # parser.add_argument('--filename', type=str, default='001_NAB_id_1_Facility_tr_1007_1st_2014.csv')
-    # parser.add_argument('--data_direc', type=str, default='Datasets/TSB-AD-U/')
-    parser.add_argument('--AD_Name', type=str, default='MAD')
+    parser = argparse.ArgumentParser(description='Running AUCP')
+    parser.add_argument('--filename', type=str, default='001_NAB_id_1_Facility_tr_1007_1st_2014.csv')
+    parser.add_argument('--data_direc', type=str, default='Datasets/TSB-AD-U/')
+    parser.add_argument('--AD_Name', type=str, default='AUCP')
 
     # multivariate
-    parser.add_argument('--filename', type=str, default='057_SMD_id_1_Facility_tr_4529_1st_4629.csv')
-    parser.add_argument('--data_direc', type=str, default='Datasets/TSB-AD-M/')
+    # parser.add_argument('--filename', type=str, default='057_SMD_id_1_Facility_tr_4529_1st_4629.csv')
+    # parser.add_argument('--data_direc', type=str, default='Datasets/TSB-AD-M/')
     args = parser.parse_args()
 
     Custom_AD_HP = {
@@ -172,7 +170,6 @@ if __name__ == '__main__':
 
     slidingWindow = find_length_rank(data, rank=1)
 
-    print("------- ON WHOLE DATA -------")
     clf = AUCP()
     output = clf.predict(data)
     pred = output   # output has already the predictions

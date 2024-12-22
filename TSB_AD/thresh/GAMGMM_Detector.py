@@ -18,13 +18,11 @@ import argparse, time
 
 from TSB_AD.evaluation.metrics import get_metrics
 from TSB_AD.utils.slidingWindows import find_length_rank
-from TSB_AD.models.base import BaseDetector
-
 
 
 from .thresholding_utils import check_scores, normalize
 
-class GAMGMM(BaseDetector):
+class GAMGMM():
     r"""GAMGMM class for gammaGMM thresholder.
 
        Use a Bayesian method for estimating the posterior distribution
@@ -462,10 +460,10 @@ if __name__ == '__main__':
 
     Start_T = time.time()
     ## ArgumentParser
-    parser = argparse.ArgumentParser(description='Running MAD')
+    parser = argparse.ArgumentParser(description='Running GAMGMM')
     parser.add_argument('--filename', type=str, default='001_NAB_id_1_Facility_tr_1007_1st_2014.csv')
     parser.add_argument('--data_direc', type=str, default='Datasets/TSB-AD-U/')
-    parser.add_argument('--AD_Name', type=str, default='MAD')
+    parser.add_argument('--AD_Name', type=str, default='GAMGMM')
     args = parser.parse_args()
 
     # multivariate
@@ -494,34 +492,9 @@ if __name__ == '__main__':
     print('label: ', label.shape)
 
     slidingWindow = find_length_rank(data, rank=1)
-    train_index = args.filename.split('.')[0].split('_')[-3]
-    data_train = data[:int(train_index), :]
-    data_test = data[int(train_index):, :]
-    label_test = label[int(train_index):]
 
-    start_time = time.time()
-
-    print("------- ON TEST DATA -------")
     clf = GAMGMM(**Custom_AD_HP)
-    # clf.fit(data_train)
-    output = clf.predict(data_test)
+    output = clf.predict(data)
     pred = output   # output has already the predictions
-
-    end_time = time.time()
-    run_time = end_time - start_time
-
-    evaluation_result = get_metrics(output, label_test, slidingWindow=slidingWindow, pred=pred)
+    evaluation_result = get_metrics(output, label, slidingWindow=slidingWindow, pred=pred)
     print('Evaluation Result: ', evaluation_result)
-    # THIS IS THE OUTPUT, TODO maybe check and modify not to get np.float64?
-    # Evaluation Result:  {'AUC-PR': np.float64(0.1185928941910645), 'AUC-ROC': np.float64(0.5093895820170664), 'VUS-PR': np.float64(0.12024946396753125), 
-    # 'VUS-ROC': np.float64(0.5098574578334355), 'Standard-F1': np.float64(0.04838709677419355), 'PA-F1': 0.9716713881019831, 
-    # 'Event-based-F1': np.float64(0.47368421052631543), 'R-based-F1': 0.23175435727792243, 'Affiliation-F': 0.7845131472572064}
-
-    ####!
-    # print("------- ON WHOLE DATA -------")
-    # clf = GAMGMM(**Custom_AD_HP)
-    # # clf.fit(data)
-    # output = clf.predict(data)
-    # pred = output
-    # evaluation_result = get_metrics(output, label, slidingWindow=slidingWindow, pred=pred)
-    # print('Evaluation Result: ', evaluation_result)
