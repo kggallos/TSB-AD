@@ -8,19 +8,17 @@ Original source: [https://github.com/cbhua/peak-over-threshold]
 
 import pandas as pd
 import numpy as np
-import argparse, time
+import argparse
 from math import log
-from sklearn.preprocessing import MinMaxScaler
 
 from TSB_AD.evaluation.metrics import get_metrics
 from TSB_AD.utils.slidingWindows import find_length_rank
-from TSB_AD.models.base import BaseDetector
 from .grimshaw import grimshaw
 
 from .thresholding_utils import normalize
 
 
-class POT(BaseDetector):
+class POT:
     """
     POT class for Peak-Over-Threshold thresholder.
 
@@ -60,7 +58,6 @@ class POT(BaseDetector):
 
     def __init__(self, risk=1e-4, init_level=0.98,
                   num_candidates=10, epsilon=1e-8, normalize=True):
-        super().__init__()
         self.risk = risk
         self.init_level = init_level
         self.num_candidates = num_candidates
@@ -86,7 +83,32 @@ class POT(BaseDetector):
         self : object
             Fitted estimator.
         """
+        pass
 
+    def decision_function(self, X):
+        """    
+        Not used, present for API consistency by convention.
+        """
+        pass
+
+    def predict(self, X):
+        """Predict outliers of X using the fitted thresholding method.
+
+        The anomalies of an input sample is computed based on different
+        thresholding algorithms. Normal data points are defined as 0 
+        while outliers are defined as 1.
+
+        Parameters
+        ----------
+        X : numpy array of shape (n_samples, n_features)
+            The training input samples. Sparse matrices are accepted only
+            if they are supported by the base estimator.
+
+        Returns
+        -------
+        predictions : numpy array of shape (n_samples,)
+            The predictions of the input samples.
+        """
         n_samples, n_features = X.shape
 
         X = self._check_dimensions(X)
@@ -113,39 +135,7 @@ class POT(BaseDetector):
 
         self.threshold_ = z
 
-        #TODO should we keep this?
-        # or maybe set decision_scores_ with 0s and 1s based on the method?
-        self.decision_scores_ = np.zeros(n_samples) 
-
-        return self
-
-    def decision_function(self, X):
-        # return self.predict(X) #TODO maybe we can keep this? Or is it inconsistent?
-        pass
-
-    def predict(self, X):
-        """Predict outliers of X using the fitted thresholding method.
-
-        The anomalies of an input sample is computed based on different
-        thresholding algorithms. Normal data points are defined as 0 
-        while outliers are defined as 1.
-
-        Parameters
-        ----------
-        X : numpy array of shape (n_samples, n_features)
-            The training input samples. Sparse matrices are accepted only
-            if they are supported by the base estimator.
-
-        Returns
-        -------
-        predictions : numpy array of shape (n_samples,)
-            The predictions of the input samples.
-        """
-        X = self._check_dimensions(X)
-
-        n_samples = len(X)
-
-        # n_samples, n_features = X.shape
+        # Prediction part
         preds = np.zeros(n_samples)
         preds[X >= self.threshold_] = 1
 
@@ -162,7 +152,7 @@ class POT(BaseDetector):
     def get_anomaly_indices(self):
         """
         Get anomalies indices of predicted data.
-        If not fitted, returns empty list."""
+        If predict() is not called, it returns empty list."""
         return self.anomaly_indices
     
     def _check_dimensions(self, X):
@@ -198,23 +188,8 @@ class POT(BaseDetector):
         )
 
 
-
-# def run_Custom_AD_Unsupervised(data, 
-#             risk, init_level, num_candidates, epsilon):
-    # clf = POT(risk=risk, init_level=init_level,
-    #            num_candidates=num_candidates, epsilon=epsilon)
-def run_Custom_AD_Unsupervised(data, HP):
-    clf = POT(**HP)
-    clf.fit(data)
-    score = clf.predict(data)
-    # score = clf.decision_scores_
-    # score = MinMaxScaler(feature_range=(0,1)).fit_transform(score.reshape(-1,1)).ravel()
-    return score
-
-
 if __name__ == '__main__':
 
-    Start_T = time.time()
     ## ArgumentParser
     parser = argparse.ArgumentParser(description='Running POT')
     parser.add_argument('--filename', type=str, default='001_NAB_id_1_Facility_tr_1007_1st_2014.csv')
@@ -224,7 +199,6 @@ if __name__ == '__main__':
     # mutlivariate
     # parser.add_argument('--filename', type=str, default='057_SMD_id_1_Facility_tr_4529_1st_4629.csv')
     # parser.add_argument('--data_direc', type=str, default='Datasets/TSB-AD-M/')
-
     args = parser.parse_args()
 
     Custom_AD_HP = {
@@ -241,18 +215,9 @@ if __name__ == '__main__':
     print('label: ', label.shape)
 
     slidingWindow = find_length_rank(data, rank=1)
-    train_index = args.filename.split('.')[0].split('_')[-3]
-    data_train = data[:int(train_index), :]
 
-    start_time = time.time()
-
-    # output = run_Custom_AD_Unsupervised(data, **Custom_AD_HP)
-    output = run_Custom_AD_Unsupervised(data, Custom_AD_HP)
-
-    end_time = time.time()
-    run_time = end_time - start_time
-
-    pred = output   #NOTE output has already the predictions
-    # pred = output > (np.mean(output)+3*np.std(output))
+    clf = POT(**Custom_AD_HP)
+    output = clf.predict(data)
+    pred = output
     evaluation_result = get_metrics(output, label, slidingWindow=slidingWindow, pred=pred)
     print('Evaluation Result: ', evaluation_result)

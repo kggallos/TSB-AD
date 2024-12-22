@@ -8,18 +8,17 @@ Original source: [https://github.com/cbhua/peak-over-threshold]
 
 import pandas as pd
 import numpy as np
-import argparse, time
+import argparse
 
 from TSB_AD.evaluation.metrics import get_metrics
 from TSB_AD.utils.slidingWindows import find_length_rank
-from TSB_AD.models.base import BaseDetector
 from .grimshaw import grimshaw
 
 import numpy as np
 from .POT_Detector import POT
 
 
-class SPOT(BaseDetector):
+class SPOT:
     """
     SPOT class for Streaming Peak-Over-Threshold thresholder.
 
@@ -69,7 +68,7 @@ class SPOT(BaseDetector):
     and Data Mining. 2017.
     """
 
-    def __init__(self, num_init=None, risk=1e-4,
+    def __init__(self, num_init=100, risk=1e-4,
                  init_level=0.98, num_candidates=10, epsilon=1e-8):
         self.num_init = num_init
         self.risk = risk
@@ -81,57 +80,29 @@ class SPOT(BaseDetector):
         self.anomaly_indices = []
         self.thresholds = []
         self.initial_threshold_ = None
-        self.peaks_ = None
 
     def fit(self, X, y=None):
-        """
-        Initialize the SPOT detector using the first `num_init` points.
+        """Fit detector. y is ignored in unsupervised methods.
 
         Parameters
         ----------
-        data : numpy array of shape (n_samples,)
-            The input data stream.
+        X : numpy array of shape (n_samples, n_features)
+            The input samples.
+
+        y : Ignored
+            Not used, present for API consistency by convention.
 
         Returns
         -------
         self : object
-            Fitted SPOT instance.
+            Fitted estimator.
         """
-        # X = self._check_dimensions(X)
+        pass
 
-        if not self.num_init:
-            # set whole input as training part
-            self.num_init = len(X)
-
-        if len(X) < self.num_init:
-            raise ValueError("Input data must have at least `num_init` samples.")
-
-        init_data = X[:self.num_init]
-
-        try:
-            pot = POT(risk=self.risk, init_level=self.init_level,  
-                    num_candidates=self.num_candidates, epsilon=self.epsilon)
-            pot.fit(init_data.reshape(-1, 1))
-        except ValueError as e:
-            error_message = str(e)
-            if "arange: cannot compute length" in error_message:
-                raise ValueError(f"{error_message}. The num_init parameter is set too low.")
-            else:
-                raise ValueError(error_message)
-        
-        self.threshold_ = pot.threshold_ # not actually used
-        self.initial_threshold_ = pot.threshold_
-        self.peaks_ = init_data[init_data > self.initial_threshold_] - self.initial_threshold_
-
-        # threshold of training data is inital threshold
-        self.thresholds = [pot.threshold_] * self.num_init
-
-        self.decision_scores_ = np.zeros(len(X)) 
-
-        return self
-    
     def decision_function(self, X):
-        # return self.predict(X) #TODO maybe we can keep this? Or is it inconsistent?
+        """    
+        Not used, present for API consistency by convention.
+        """
         pass
 
     def predict(self, X):
@@ -149,14 +120,40 @@ class SPOT(BaseDetector):
             Predictions (1 for anomaly, 0 for normal).
         """
         X = self._check_dimensions(X)
+
+        if len(X) < self.num_init:
+            raise ValueError("Input data must have at least `num_init` samples.")
+
+        init_data = X[:self.num_init]
+        rest_data = X[self.num_init:]
+
+        try:
+            pot = POT(risk=self.risk, init_level=self.init_level,  
+                    num_candidates=self.num_candidates, epsilon=self.epsilon)
+            pot.predict(init_data.reshape(-1, 1))
+        except ValueError as e:
+            error_message = str(e)
+            if "arange: cannot compute length" in error_message:
+                raise ValueError(f"{error_message}. The num_init parameter is set too low.")
+            else:
+                raise ValueError(error_message)
+        
+        self.threshold_ = pot.threshold_ # not actually used
+        self.initial_threshold_ = pot.threshold_
+        peaks = init_data[init_data > self.initial_threshold_] - self.initial_threshold_
+
+        # threshold of training data is initial threshold
+        self.thresholds = [pot.threshold_] * self.num_init
+
+
+        # X = self._check_dimensions(X)
         
         k = self.num_init
         current_threshold = self.initial_threshold_
-        peaks = self.peaks_
 
         anomaly_indices = []
 
-        for index, x in enumerate(X):
+        for index, x in enumerate(rest_data):
             if x > current_threshold:
                 anomaly_indices.append(index)
             elif x > self.initial_threshold_:
@@ -169,7 +166,7 @@ class SPOT(BaseDetector):
                 if gamma != 0:
                     current_threshold = self.initial_threshold_ + (sigma / gamma) * (pow(r, -gamma) - 1)
                 else:
-                    # TODO what happens if gamma is 0 ?
+                    # what happens if gamma is 0 ?
                     current_threshold = self.initial_threshold_ - sigma
             else:
                 k += 1
@@ -182,16 +179,17 @@ class SPOT(BaseDetector):
         preds[anomaly_indices] = 1
         return preds
 
+
     def get_thresholds(self):
         """
-        Get dynamic thresholds of fitted and predicted data.
-        If not fitted, returns only thresholds of fitted data."""
+        Get dynamic thresholds of predicted data.
+        """
         return self.thresholds
     
     def get_anomaly_indices(self):
         """
         Get anomalies indices of predicted data.
-        If not fitted, returns empty list."""
+        If predict() is not called, it returns empty list."""
         return self.anomaly_indices
 
     def _check_dimensions(self, X):
@@ -227,21 +225,8 @@ class SPOT(BaseDetector):
         )
 
 
-# def run_Custom_AD_Semisupervised(data, num_init, 
-#             risk, init_level, num_candidates, epsilon):
-#     clf = SPOT(num_init=num_init, risk=risk, init_level=init_level,
-#                num_candidates=num_candidates, epsilon=epsilon)
-def run_Custom_AD_Semisupervised(data_train, data_test, HP):
-    clf = SPOT(**HP)
-    clf.fit(data_train)
-    score = clf.predict(data_test)
-    # score = clf.decision_function(data_test)
-    # score = MinMaxScaler(feature_range=(0,1)).fit_transform(score.reshape(-1,1)).ravel()
-    return score
-
 if __name__ == '__main__':
 
-    Start_T = time.time()
     ## ArgumentParser
     parser = argparse.ArgumentParser(description='Running SPOT')
     parser.add_argument('--filename', type=str, default='001_NAB_id_1_Facility_tr_1007_1st_2014.csv')
@@ -251,7 +236,6 @@ if __name__ == '__main__':
     # mutlivariate
     # parser.add_argument('--filename', type=str, default='057_SMD_id_1_Facility_tr_4529_1st_4629.csv')
     # parser.add_argument('--data_direc', type=str, default='Datasets/TSB-AD-M/')
-
     args = parser.parse_args()
 
     Custom_AD_HP = {
@@ -269,18 +253,9 @@ if __name__ == '__main__':
     print('label: ', label.shape)
 
     slidingWindow = find_length_rank(data, rank=1)
-    train_index = args.filename.split('.')[0].split('_')[-3]
-    data_train = data[:int(train_index), :]
 
-    start_time = time.time()
-
-    output = run_Custom_AD_Semisupervised(data_train, data, Custom_AD_HP)
-    # output = run_Custom_AD_Semisupervised(data_train, data, **Custom_AD_HP)
-
-    end_time = time.time()
-    run_time = end_time - start_time
-
-    pred = output   #NOTE output has already the predictions
-    # pred = output > (np.mean(output)+3*np.std(output))
+    clf = SPOT(**Custom_AD_HP)
+    output = clf.predict(data)
+    pred = output
     evaluation_result = get_metrics(output, label, slidingWindow=slidingWindow, pred=pred)
     print('Evaluation Result: ', evaluation_result)
